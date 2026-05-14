@@ -13,7 +13,12 @@ ENV APP_DEBUG=false
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan storage:link
 
-# Important: Use the built-in start command
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 CMD ["/start.sh"]

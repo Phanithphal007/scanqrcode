@@ -1,32 +1,24 @@
-#!/bin/bash
+FROM richarvey/nginx-php-fpm:3.1.6
 
-echo "🚀 Starting Laravel on Render..."
+COPY . /var/www/html
 
-# Run migrations
-php artisan migrate --force
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Cache configs
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+ENV WEBROOT=/var/www/html/public
+ENV PHP_ERRORS_STDERR=1
+ENV RUN_SCRIPTS=1
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 
-# Fix PHP-FPM pool configuration to suppress the warning
-echo "Fixing PHP-FPM configuration..."
-cat > /usr/local/etc/php-fpm.d/www.conf << EOF
-[www]
-user = www-data
-group = www-data
-listen = /var/run/php/php8.2-fpm.sock
-listen.owner = www-data
-listen.group = www-data
-listen.mode = 0660
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-EOF
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Start services
-php-fpm -D
-nginx -g 'daemon off;'
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan storage:link
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
