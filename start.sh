@@ -1,16 +1,13 @@
 #!/bin/bash
-# Clear and rebuild caches
-php artisan config:clear
-php artisan cache:clear
+
+# Run migrations
+php artisan migrate --force
+
+# Clear and cache configs
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-# Run database migrations
-php artisan migrate --force
-# Seed admin user (first time only)
-php artisan db:seed --class=DatabaseSeeder --force
-# Fix permissions
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache
-# Start services
+
+# Start PHP-FPM and Nginx
 php-fpm -D
-nginx -g "daemon off;"
+nginx -g 'daemon off;'
