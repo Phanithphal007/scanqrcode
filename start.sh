@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# Run migrations
-php artisan migrate --force
+echo "✅ Starting POS System..."
 
-# Clear and cache configs
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Final cache (in case)
+php artisan config:clear
+php artisan cache:clear
 
-# Start PHP-FPM and Nginx
-php-fpm -D
-nginx -g 'daemon off;'
+echo "🚀 Application is ready!"
+exec /start.sh-original   # or just let nginx start
