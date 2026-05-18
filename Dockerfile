@@ -1,24 +1,20 @@
-FROM richarvey/nginx-php-fpm:3.1.6
-
-COPY . /var/www/html
-
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-ENV WEBROOT=/var/www/html/public
-ENV PHP_ERRORS_STDERR=1
-ENV RUN_SCRIPTS=1
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan storage:link
-
+FROM php:8.2-fpm
+RUN apt-get update && apt-get install -y \
+git curl libpng-dev libonig-dev \
+libxml2-dev libpq-dev zip unzip nginx
+RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+WORKDIR /var/www
+COPY . .
+RUN composer install --no-dev --optimize-autoloader
+RUN mkdir -p storage/framework/sessions \
+storage/framework/views \
+storage/framework/cache \
+storage/logs bootstrap/cache
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+COPY nginx.conf /etc/nginx/sites-enabled/default
+EXPOSE 10000
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
-
 CMD ["/start.sh"]

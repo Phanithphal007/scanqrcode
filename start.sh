@@ -1,24 +1,16 @@
-FROM richarvey/nginx-php-fpm:3.1.6
-
-COPY . /var/www/html
-
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-ENV WEBROOT=/var/www/html/public
-ENV PHP_ERRORS_STDERR=1
-ENV RUN_SCRIPTS=1
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan storage:link
-
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+#!/bin/bash
+# Clear and rebuild caches
+php artisan config:clear
+php artisan cache:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+# Run database migrations
+php artisan migrate --force
+# Seed admin user (first time only)
+php artisan db:seed --class=DatabaseSeeder --force
+# Fix permissions
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Start services
+php-fpm -D
+nginx -g "daemon off;"

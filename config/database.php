@@ -96,12 +96,14 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'disable',
+            // 'sslmode' => 'disable',
+            'sslmode' => env('DB_SSLMODE', 'required'),
             'options' => [
                 PDO::ATTR_EMULATE_PREPARES => false,
                 // Remove or comment this line:
                 // PDO::ATTR_SSLMODE => 'disable',
             ],
+
         ],
 
         'sqlsrv' => [
